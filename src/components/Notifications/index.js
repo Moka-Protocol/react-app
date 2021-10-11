@@ -25,10 +25,7 @@ function Notifications(props) {
                 <div>TX Status: {item.receipt ? 'Confirmed' : 'Pending...'}</div>
               </ReactTooltip>
               <Bubble data-tip data-for={item.transaction.hash} txComplete={item.receipt ? true : false} key={index} href={BLOCKEXPLORERS[process.env.REACT_APP_ENV] + 'tx/' + item.transaction.hash} target="_blank" rel="noreferrer">
-                {
-                  item.receipt &&
-                  <Checkmark size="10px" style={{ marginRight: '1px' }} />
-                }
+                <Checkmark size="10px" style={{ marginRight: '1px' }} />
               </Bubble>
             </React.Fragment>
           ) : null;

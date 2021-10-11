@@ -75,7 +75,7 @@ function Row(props) {
   return (
     <Wrap href={props.item.url} target="_blank" rel="noreferrer">
       {
-        props.index < 10 &&
+        props.index < 10 && props.paramTime !== 'latest' &&
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '16px', marginLeft: '5px', fontSize: '1.1em' }}>{props.index + 1}.</div>
       }
       <Body>

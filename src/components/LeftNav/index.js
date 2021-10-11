@@ -18,7 +18,7 @@ function LeftNav(props) {
 
   useEffect(() => {
     if (forums && forums.length > 0 && !props.paramId) {
-      props.parentProps.history.push('/d/' + forums[0][0] + '_' + forums[0][2] + '/daily');
+      props.parentProps.history.push('/d/' + forums[0][0] + '_' + forums[0][2] + '/latest');
     }
   },[forums, props.paramId, props.parentProps.history]);
 

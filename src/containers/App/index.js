@@ -21,7 +21,7 @@ function App(props) {
       <Router>
         <Switch>
           <Redirect exact from="/" to="/d" />
-          <Redirect exact from="/d/:id" to="/d/:id/daily" />
+          <Redirect exact from="/d/:id" to="/d/:id/latest" />
           <Route path={["/d/:id/:time","/d"]} render={(props) => (<Dashboard {...props} pageLoadTime={pageLoadTime} />)} />
           <Route path="/about" component={About} />
           <Route path="/activity" component={Activity} />

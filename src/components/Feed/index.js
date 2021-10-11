@@ -75,7 +75,7 @@ const GET_ALL_POSTS = `
   query GetAllPosts($id: String!) {
     forum(id: $id) {
       id
-      posts(orderBy: upvotes, orderDirection:desc) {
+      posts(orderBy: timestamp, orderDirection:desc) {
         id
         upvotes
         timestamp
@@ -173,6 +173,13 @@ function Feed(props) {
       <Header>
         <HeaderLeft>
           <HeaderItem
+            to={'/d/' +  props.paramId + '/latest'}
+            activeStyle={{ color: '#000', textDecoration: 'underline' }}
+          >
+            Latest
+          </HeaderItem>
+          <HeaderMiddot>&#8729;</HeaderMiddot>
+          <HeaderItem
             to={'/d/' + props.paramId + '/daily'}
             activeStyle={{ color: '#000', textDecoration: 'underline' }}
           >
@@ -192,19 +199,12 @@ function Feed(props) {
           >
             Monthly
           </HeaderItem>
-          <HeaderMiddot>&#8729;</HeaderMiddot>
-          <HeaderItem
-            to={'/d/' +  props.paramId + '/newest'}
-            activeStyle={{ color: '#000', textDecoration: 'underline' }}
-          >
-            Newest
-          </HeaderItem>
         </HeaderLeft>
         <PostButton onClick={() => props.setModal('ADD')}>Add</PostButton>
       </Header>
       <Body>
         {
-          posts && posts.map((item, index) => <Row key={index} index={index} paramId={props.paramId} userUpvotes={props.userUpvotes} item={item} />)
+          posts && posts.map((item, index) => <Row key={index} index={index} paramId={props.paramId} paramTime={props.paramTime} userUpvotes={props.userUpvotes} item={item} />)
         }
       </Body>
       <Footer style={{ display: 'none' }}>
