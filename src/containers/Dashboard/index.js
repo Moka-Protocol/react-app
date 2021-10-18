@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { gql, useQuery } from "@apollo/client";
+import { CONTRACTS } from 'constants/constants';
+import { GET_USER_UPVOTES } from 'gql/queries';
+
+//WEB3
 import { useEthers } from '@usedapp/core';
+import { utils } from 'ethers';
+import { useContractCall } from '@usedapp/core';
+
+//CONTRACT ABIS
+import MokaTokenABI from 'contracts/MokaToken.json';
+import MokaTokenSaleABI from 'contracts/MokaTokenSale.json';
 
 //COMPONENTS
 import LeftNav from 'components/LeftNav';
@@ -10,26 +20,11 @@ import Notifications from 'components/Notifications';
 
 //MODALS
 import AddModal from 'components/AddModal';
-import WalletModal from 'components/WalletModal';
-import PrizeModal from 'components/PrizeModal';
+import PaymentModal from 'components/PaymentModal';
 import WrongNetworkModal from 'components/WrongNetworkModal';
 
 //STYLES
-import {
-  Wrap, Body
-} from './styles';
-
-const GET_USER_UPVOTES = `
-  query GetUserUpvotes($id: String!) {
-    user(id: $id) {
-      id
-      upvotes {
-        id
-        postId
-      }
-    }
-  }
-`;
+import { Wrap, Body } from './styles';
 
 function Dashboard(props) {
   const paramId = props.match.params.id;
@@ -38,7 +33,28 @@ function Dashboard(props) {
   const [modal, setModal] = useState(null);
   const [wrongNetwork, setWrongNetwork] = useState(false);
   const { activateBrowserWallet, account, error } = useEthers();
-  const { data: voteData } = useQuery(gql(GET_USER_UPVOTES), { variables: { id: account && account.toString().toLowerCase() } });
+  const { data: voteData, refetch } = useQuery(gql(GET_USER_UPVOTES), { variables: { id: account && account.toString().toLowerCase() } });
+
+  const [tokenBalance] = useContractCall(account && {
+    abi: new utils.Interface(MokaTokenABI),
+    address: CONTRACTS[process.env.REACT_APP_ENV].MOKATOKEN,
+    method: 'balanceOf',
+    args: [account]
+  }) ?? []
+
+  const [addressExists] = useContractCall(account && {
+    abi: new utils.Interface(MokaTokenSaleABI),
+    address: CONTRACTS[process.env.REACT_APP_ENV].MOKATOKENSALE,
+    method: 'addressUserMapping',
+    args: [account]
+  }) ?? []
+
+  const priceBand = useContractCall(account && {
+    abi: new utils.Interface(MokaTokenSaleABI),
+    address: CONTRACTS[process.env.REACT_APP_ENV].MOKATOKENSALE,
+    method: 'getCurrentPriceBand',
+    args: null
+  }) ?? null
 
   useEffect(() => {
     if (voteData) {
@@ -54,10 +70,19 @@ function Dashboard(props) {
     } else {
       setUserUpvotes([]);
     }
-  },[voteData, account]);
+
+    if (account && voteData && voteData.user) {
+      if (account.toString().toLowerCase() !== voteData.user.id) {
+        refetch();
+      }
+    }
+  },[voteData, account, refetch]);
 
   useEffect(() => {
-    if (error && error.name === 'UnsupportedChainIdError') {
+    if (
+      (error && error.message && error.message.toLowerCase().replace(/\s/g, '').includes('unsupportedchain')) ||
+      (error && error.name === 'UnsupportedChainIdError')
+    ) {
       setWrongNetwork(true);
     }
   },[error]);
@@ -76,6 +101,7 @@ function Dashboard(props) {
             <Feed
               paramId={paramId}
               paramTime={paramTime}
+              account={account}
               userUpvotes={userUpvotes}
               setModal={(value) => {setModal(value)}}
             />
@@ -84,6 +110,9 @@ function Dashboard(props) {
               paramTime={paramTime}
               wrongNetwork={wrongNetwork}
               account={account}
+              tokenBalance={tokenBalance}
+              addressExists={addressExists}
+              priceBand={priceBand}
               activateBrowserWallet={() => activateBrowserWallet()}
               setModal={(value) => setModal(value)}
             />
@@ -93,15 +122,20 @@ function Dashboard(props) {
       <Notifications pageLoadTime={props.pageLoadTime} />
       {
         modal === 'ADD' &&
-        <AddModal paramId={paramId} closeModal={() => setModal(null)} />
+        <AddModal
+          paramId={paramId}
+          paramTime={paramTime}
+          account={account}
+          closeModal={() => setModal(null)}
+        />
       }
       {
-        modal === 'WALLET' &&
-        <WalletModal closeModal={() => setModal(null)} />
-      }
-      {
-        modal === 'PRIZE' &&
-        <PrizeModal closeModal={() => setModal(null)} />
+        modal === 'PAYMENT' &&
+        <PaymentModal
+          priceBand={priceBand}
+          account={account}
+          closeModal={() => setModal(null)} 
+        />
       }
       {
         modal === 'WRONG-NETWORK' &&

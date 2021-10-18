@@ -21,5 +21,5 @@ export const SubmitButton = styled.button`
   height: 40px;
   border-radius: 5px;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 700;
 `;

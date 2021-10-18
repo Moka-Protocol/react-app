@@ -166,22 +166,14 @@
 				"internalType": "address[]",
 				"name": "_contracts",
 				"type": "address[]"
+			},
+			{
+				"internalType": "uint8[]",
+				"name": "_decimals",
+				"type": "uint8[]"
 			}
 		],
 		"name": "setAllowedStableCoins",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_count",
-				"type": "uint256"
-			}
-		],
-		"name": "setUserCount",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -200,6 +192,25 @@
 				"internalType": "address",
 				"name": "",
 				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"name": "stablecoinDecimals",
+		"outputs": [
+			{
+				"internalType": "uint8",
+				"name": "",
+				"type": "uint8"
 			}
 		],
 		"stateMutability": "view",

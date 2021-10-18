@@ -1,6 +1,6 @@
 import React from 'react';
 import Modal from 'react-modal';
-import { NOTION_NETWORK_LINK } from 'constants/constants';
+import { LINKS, NETWORKNAME } from 'constants/constants';
 
 //COMPONENTS
 import Close from 'assets/svgs/close';
@@ -36,8 +36,8 @@ function WrongNetworkModal(props) {
       <CloseWrap onClick={props.closeModal}><Close size="16px" /></CloseWrap>
       <div>
         <div style={{ marginBottom: '20px', fontWeight: 600 }}>Wrong Network</div>
-        <div style={{ lineHeight: 1.5, marginBottom: '10px' }}>To participate in Moka, please connect to the Polygon network and refresh the page.</div>
-        <a style={{ color: 'inherit' }} href={NOTION_NETWORK_LINK} target="_blank" rel="noreferrer">Click here for a step-by-step guide</a>.
+        <div style={{ lineHeight: 1.5, marginBottom: '10px' }}>To participate in Moka, please connect to the {NETWORKNAME[process.env.REACT_APP_ENV]} and refresh the page.</div>
+        <a style={{ color: 'inherit' }} href={LINKS.CONNECT} target="_blank" rel="noreferrer">Click here for a step-by-step guide</a>.
       </div>
     </Modal>
   );

@@ -43,25 +43,15 @@ export const HeaderItem = styled(NavLink)`
   }
 `;
 
-export const HeaderMiddot = styled.div`
-  color: #6d6d6d;
-  margin: 0 5px;
-`;
-
-export const PostButton = styled.button`
+export const HeaderIconWrap = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: auto;
-  margin-right: 15px;
-  width: 70px;
-  height: 35px;
-  font-weight: 600;
-  cursor: pointer;
-  background: #656565;
-  border: none;
-  border-radius: 35px;
-  color: #fff;
+`;
+
+export const HeaderMiddot = styled.div`
+  color: #6d6d6d;
+  margin: 0 5px;
 `;
 
 export const Body = styled.div`

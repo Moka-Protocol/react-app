@@ -4,7 +4,7 @@ export const Wrap = styled.a`
   height: 60px;
   border-bottom: 1px solid #f7f7f7;
   cursor: pointer;
-  padding: 10px 15px;
+  padding: 10px 0px 10px 20px;
   flex-shrink: 0;
   display: flex;
   text-decoration: none;

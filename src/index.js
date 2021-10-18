@@ -10,9 +10,17 @@ import { GlobalStyle } from 'styles/Global';
 
 let SUBGRAPH_URI = KEYS[process.env.REACT_APP_ENV].SUBGRAPH_URI;
 
+const cache = new InMemoryCache({
+  dataIdFromObject: object => {
+    switch (object.__typename) {
+      default: return object.id;
+    }
+  }
+});
+
 const client = new ApolloClient({
   uri: SUBGRAPH_URI,
-  cache: new InMemoryCache()
+  cache
 });
 
 const config = {

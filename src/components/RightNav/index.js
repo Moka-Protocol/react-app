@@ -1,20 +1,24 @@
-import React, { useEffect, useState } from 'react';
-import { utils } from 'ethers';
+import React, { useState, useEffect } from 'react';
+import ReactTooltip from 'react-tooltip';
 import { gql, useQuery } from "@apollo/client";
-import { useContractFunction, useContractCall } from '@usedapp/core';
-import MokaTokenABI from 'contracts/MokaToken.json';
-import MokaTokenSaleABI from 'contracts/MokaTokenSale.json';
+import { CONTRACTS, LINKS, MOKALINKS } from 'constants/constants';
+
+//WEB3
+import { utils } from 'ethers';
+import { useContractFunction } from '@usedapp/core';
 import { BigNumber } from '@ethersproject/bignumber'
 import { Contract } from '@ethersproject/contracts';
-import { CONTRACTS } from 'constants/constants';
-import { getCurrentTimeMappings } from 'constants/functions';
+
+//CONTRACT ABIS
+import MokaTokenSaleABI from 'contracts/MokaTokenSale.json';
 
 //COMPONENTS
 import Moka from 'assets/svgs/moka';
+import Loading from 'assets/svgs/loading';
+import Info from 'assets/svgs/info';
 
-import {
-  Wrap, Wallet, WalletRow, WalletRowBalance, WalletRowIcon, ClaimTokens, PrizePool, PoolRow, PoolRowAward, PoolRowIcon, Link
-} from './styles';
+//STYLES
+import { Wrap, Wallet, WalletRow, WalletRowBalance, WalletRowIcon, ClaimTokens, ClaimTokensIconWrap, Link } from './styles';
 
 const GET_USER_TOKEN_STATS = `
   query GetUserTokenStats($id: String!) {
@@ -26,69 +30,24 @@ const GET_USER_TOKEN_STATS = `
   }
 `;
 
-const GET_DAILY_REWARDS = `
-  query GetDailyRewards($id: String!) {
-    forumPostDayMapping(id: $id) {
-      id
-      rewards
-    }
-  }
-`;
-
-const GET_WEEKLY_REWARDS = `
-  query GetWeeklyRewards($id: String!) {
-    forumPostWeekMapping(id: $id) {
-      id
-      rewards
-    }
-  }
-`;
-
-const GET_MONTHLY_REWARDS = `
-  query GetMonthlyRewards($id: String!) {
-    forumPostMonthMapping(id: $id) {
-      id
-      rewards
-    }
-  }
-`;
-
 const tokenSaleContract = new Contract(CONTRACTS[process.env.REACT_APP_ENV].MOKATOKENSALE, new utils.Interface(MokaTokenSaleABI))
 
 function RightNav(props) {
+  const [buyState, setBuyState] = useState(0);
+
   const account = props.account;
   const wrongNetwork = props.wrongNetwork;
 
   const { data: userData } = useQuery(gql(GET_USER_TOKEN_STATS), { variables: { id: account && account.toString().toLowerCase() } });
+  const { send, state } = useContractFunction(tokenSaleContract, 'buy', { transactionName: 'Buy' })
 
-  const [tokenBalance] = useContractCall({
-    abi: new utils.Interface(MokaTokenABI),
-    address: CONTRACTS[process.env.REACT_APP_ENV].MOKATOKEN,
-    method: 'balanceOf',
-    args: [account]
-  }) ?? []
-
-  const [addressExists] = useContractCall({
-    abi: new utils.Interface(MokaTokenSaleABI),
-    address: CONTRACTS[process.env.REACT_APP_ENV].MOKATOKENSALE,
-    method: 'addressUserMapping',
-    args: [account]
-  }) ?? []
-
-  const priceBand = useContractCall({
-    abi: new utils.Interface(MokaTokenSaleABI),
-    address: CONTRACTS[process.env.REACT_APP_ENV].MOKATOKENSALE,
-    method: 'getCurrentPriceBand',
-    args: null
-  }) ?? null
-
-  const { state, send } = useContractFunction(tokenSaleContract, 'buy', { transactionName: 'Buy' })
-
-  let mappings = getCurrentTimeMappings();
-
-  const { data: dailyRewards } = useQuery(gql(GET_DAILY_REWARDS), { variables: { id: props.paramId.split('_')[0] + '_' + mappings.daily } });
-  const { data: weeklyRewards } = useQuery(gql(GET_WEEKLY_REWARDS), { variables: { id: props.paramId.split('_')[0] + '_' + mappings.weekly } });
-  const { data: monthlyRewards } = useQuery(gql(GET_MONTHLY_REWARDS), { variables: { id: props.paramId.split('_')[0] + '_' + mappings.monthly } });
+  useEffect(() => {
+    if (state.status === 'Mining') {
+      setBuyState(1);
+    } else if (state.status === 'Fail' || state.status === 'Exception') {
+      setBuyState(0);
+    }
+  },[state]);
 
   return (
     <Wrap>
@@ -98,7 +57,7 @@ function RightNav(props) {
           style={{  alignItems: 'center', fontWeight: 600, background: '#da2d2b', color: '#fff', border: '1px solid #da2d2b' }}
           onClick={() => props.setModal('WRONG-NETWORK')}
         >
-          Wrong Network
+          NETWORK
         </Wallet>
       }
       {
@@ -115,24 +74,22 @@ function RightNav(props) {
           }
           {
             account &&
-            <Wallet
-              onClick={() => { /* props.setModal('WALLET') */ }}
-            >
-              <WalletRow style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '10px', fontWeight: 500 }}>
-                <div>⛓️&nbsp;&nbsp;{account.substring(0, 8)}...</div>
+            <Wallet>
+              <WalletRow title={account} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '10px', fontWeight: 500 }}>
+                <a href={MOKALINKS[process.env.REACT_APP_ENV].USERS + account} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>⛓️&nbsp;&nbsp;{account.substring(0, 8)}...</a>
               </WalletRow>
               <WalletRow>
                 <div>Balance</div>
                 <WalletRowBalance>
                   {
-                    tokenBalance &&
-                    <div>{parseInt(utils.formatEther(tokenBalance)).toLocaleString()}</div>
+                    props.tokenBalance &&
+                    <div>{parseInt(utils.formatEther(props.tokenBalance)).toLocaleString()}</div>
                   }
                   <WalletRowIcon><Moka size="12px" /></WalletRowIcon>
                 </WalletRowBalance>
               </WalletRow>
               <WalletRow>
-                <div>Rewards</div>
+                <div>Won</div>
                 <WalletRowBalance>
                   {
                     userData && userData.user && userData.user.tokenRewards &&
@@ -146,7 +103,7 @@ function RightNav(props) {
                 </WalletRowBalance>
               </WalletRow>
               <WalletRow>
-                <div>Spent</div>
+                <div>Used</div>
                 <WalletRowBalance>
                   {
                     userData && userData.user && userData.user.tokenSpent &&
@@ -160,67 +117,48 @@ function RightNav(props) {
                 </WalletRowBalance>
               </WalletRow>
               {
-                (addressExists && addressExists._hex === '0x00') && priceBand.length > 0 &&
+                (props.addressExists && props.addressExists._hex === '0x00') && props.priceBand.length > 0 &&
                 <ClaimTokens onClick={() => {
-                  send(priceBand[0], BigNumber.from(1),null);
+                  if (buyState !== 1) {
+                    if (props.priceBand[1] === 0) {
+                      send(props.priceBand[0], BigNumber.from(1),null);
+                    } else {
+                      props.setModal('PAYMENT');
+                    }
+                  }
                 }}>
-                  Claim my {priceBand[0].toLocaleString()} Tokens for ${priceBand[1].toLocaleString()}!
+                  {
+                    buyState === 0 &&
+                    <React.Fragment>Claim my {props.priceBand[0].toLocaleString()} Tokens for ${props.priceBand[1].toLocaleString()}!</React.Fragment>
+                  }
+                  {
+                    buyState === 1 &&
+                    <React.Fragment>
+                      <ClaimTokensIconWrap>
+                        <Loading size="30px" />
+                      </ClaimTokensIconWrap>
+                      <div>Waiting...</div>
+                      <ReactTooltip id="waiting" place="top" type="dark" effect='solid'>
+                        <div>Confirming transaction with the blockchain.<br />This make take a few seconds...</div>
+                      </ReactTooltip>
+                      <ClaimTokensIconWrap data-tip data-for="waiting" style={{ marginLeft: 'auto', marginRight: '5px' }}>
+                        <Info size="18px" />
+                      </ClaimTokensIconWrap>
+                    </React.Fragment>
+                  }
                 </ClaimTokens>
               }
             </Wallet>
           }
         </React.Fragment>
       }
-      <PrizePool onClick={() => { /* props.setModal('PRIZE') */ }}>
-        <PoolRow style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '10px', fontWeight: 500 }}>
-          <div>🎉&nbsp;&nbsp;Prize Pool</div>
-        </PoolRow>
-        <PoolRow>
-          <div>Daily</div>
-          <PoolRowAward>
-            {
-              dailyRewards && dailyRewards.forumPostDayMapping &&
-              <div>{dailyRewards.forumPostDayMapping.rewards.toLocaleString()}</div>
-            }
-            {
-              dailyRewards && !dailyRewards.forumPostDayMapping &&
-              <div>0</div>
-            }
-            <WalletRowIcon><Moka size="12px" /></WalletRowIcon>
-          </PoolRowAward>
-        </PoolRow>
-        <PoolRow>
-          <div>Weekly</div>
-          <PoolRowAward>
-            {
-              weeklyRewards && weeklyRewards.forumPostWeekMapping &&
-              <div>{weeklyRewards.forumPostWeekMapping.rewards.toLocaleString()}</div>
-            }
-            {
-              weeklyRewards && !weeklyRewards.forumPostWeekMapping &&
-              <div>0</div>
-            }
-            <WalletRowIcon><Moka size="12px" /></WalletRowIcon>
-          </PoolRowAward>
-        </PoolRow>
-        <PoolRow>
-          <div>Monthly</div>
-          <PoolRowAward>
-            {
-              monthlyRewards && monthlyRewards.forumPostMonthMapping &&
-              <div>{monthlyRewards.forumPostMonthMapping.rewards.toLocaleString()}</div>
-            }
-            {
-              monthlyRewards && !monthlyRewards.forumPostMonthMapping &&
-              <div>0</div>
-            }
-            <WalletRowIcon><Moka size="12px" /></WalletRowIcon>
-          </PoolRowAward>
-        </PoolRow>
-      </PrizePool>
-      <Link>Leaderboard</Link>
-      <Link>About Moka</Link>
-      <Link>Built on ♦</Link>
+      <Wallet style={{ textAlign: 'center', fontWeight: 700, marginBottom: '15px' }} onClick={() => { props.setModal('ADD'); }}>ADD POST</Wallet>
+      <Link href={MOKALINKS[process.env.REACT_APP_ENV].LEADERBOARD} target="_blank" rel="noreferrer">Leaderboard</Link>
+      <Link href={LINKS.ABOUT} target="_blank" rel="noreferrer">About Moka</Link>
+      <Link href="https://www.ethereum.org" target="_blank" rel="noreferrer" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginTop: '5px' }}>
+        <div>Built on ♦</div>
+        <div style={{ fontSize: '0.8em' }}>(Polygon Network)</div>
+      </Link>
     </Wrap>
   );
 }

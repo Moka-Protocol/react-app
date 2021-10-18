@@ -46,8 +46,8 @@ export const WalletRowIcon = styled.div`
 `;
 
 export const ClaimTokens = styled.div`
-  background: #21c720;
-  padding: 6px;
+  background: #41b123;
+  padding: 8px 6px;
   border-radius: 5px;
   margin-top: 15px;
   color: #fff;
@@ -55,43 +55,14 @@ export const ClaimTokens = styled.div`
   cursor: pointer;
   line-height: 1.3;
   font-weight: 500;
+  display: flex;
+  align-items: center;
 `;
 
-export const PrizePool = styled.div`
-  display: flex;
-  flex-direction: column;
-  width: 175px;
-  height: 140px;
-  background: #ffd700;
-  margin-left: 15px;
-  margin-top: 15px;
-  margin-bottom: 15px;
-  border-radius: 5px;
-  display: flex;
-  justify-content: center;
-  cursor: pointer;
-  border: 1px solid #ccaf17;
-  padding: 15px 10px;
-  box-sizing: border-box;
-  flex-shrink: 0;
-`;
-
-export const PoolRow = styled.div`
-  display: flex;
-  margin: 3px 0px;
-`;
-
-export const PoolRowAward = styled.div`
-  margin-left: auto;
-  margin-right: 5px;
-  display: flex;
-`;
-
-export const PoolRowIcon = styled.div`
+export const ClaimTokensIconWrap = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 3px;
 `;
 
 export const Link = styled.a`

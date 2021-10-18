@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const DEFAULT_SIZE = '16x';
+const DEFAULT_SIZE = '16px';
 const DEFAULT_COLOR = '#fff';
 
 function Loading(props) {

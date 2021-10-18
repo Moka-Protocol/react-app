@@ -1,12 +1,13 @@
 import React, { useEffect } from 'react';
-import { utils } from 'ethers';
-import { useContractCall } from '@usedapp/core';
-import MokaFactoryABI from 'contracts/MokaFactory.json';
 import { CONTRACTS } from 'constants/constants';
 
-import {
-  Wrap, Item
-} from './styles';
+//WEB3
+import { useContractCall } from '@usedapp/core';
+import { utils } from 'ethers';
+import MokaFactoryABI from 'contracts/MokaFactory.json';
+
+//STYLES
+import { Wrap, Item } from './styles';
 
 function LeftNav(props) {
   const [forums] = useContractCall({

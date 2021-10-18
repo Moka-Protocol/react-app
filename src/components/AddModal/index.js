@@ -1,16 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { utils } from 'ethers';
-import { useContractFunction } from '@usedapp/core';
-import MokaTokenABI from 'contracts/MokaToken.json';
-import { BigNumber } from '@ethersproject/bignumber'
-import { Contract } from '@ethersproject/contracts';
-import { CONTRACTS } from 'constants/constants';
+import { useApolloClient } from '@apollo/client';
 import Modal from 'react-modal';
 import TagsInput from 'react-tagsinput';
+import { CONTRACTS } from 'constants/constants';
 
-import './tags.css';
+//WEB3
+import { useContractFunction } from '@usedapp/core';
+import { utils } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber'
+import { Contract } from '@ethersproject/contracts';
+
+//CONTRACT ABIS
+import MokaTokenABI from 'contracts/MokaToken.json';
+
+//CACHE
+import { updateAddPost } from 'cache/update';
 
 //STYLES
+import './tags.css';
 import { InputWrap, Input, SubmitButton } from './styles';
 
 const customStyles = {
@@ -30,6 +37,8 @@ Modal.setAppElement('#root');
 const contract = new Contract(CONTRACTS[process.env.REACT_APP_ENV].MOKATOKEN, new utils.Interface(MokaTokenABI))
 
 function AddModal(props) {
+  const client = useApolloClient();
+  const [updateCache, setUpdateCache] = useState(false);
   const [tags, handleChange] = useState([]);
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
@@ -37,10 +46,12 @@ function AddModal(props) {
   const { state, send } = useContractFunction(contract, 'createPost', { transactionName: 'Add Post' })
 
   useEffect(() => {
-    if (state.status === 'Mining') {
+    if (state.status === 'Mining' && updateCache === false) {
+      setUpdateCache(true);
+      updateAddPost(client, props.account, { title, desc, url, tags }, props.paramId, props.paramTime);
       props.closeModal();
     }
-  },[state, props]);
+  },[state, updateCache, setUpdateCache, client, props, title, desc, url, tags]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -58,7 +69,7 @@ function AddModal(props) {
     >
       <InputWrap>
         <Input
-          placeholder="url"
+          placeholder="URL"
           type="text"
           value={url}
           onChange={e => setUrl(e.target.value)}
@@ -66,7 +77,7 @@ function AddModal(props) {
       </InputWrap>
       <InputWrap>
         <Input
-          placeholder="title"
+          placeholder="Title"
           type="text"
           value={title}
           onChange={e => setTitle(e.target.value)}
@@ -74,14 +85,14 @@ function AddModal(props) {
       </InputWrap>
       <InputWrap>
         <Input
-          placeholder="desc"
+          placeholder="Desc"
           type="text"
           value={desc}
           onChange={e => setDesc(e.target.value)} 
         />
       </InputWrap>
       <TagsInput value={tags} onChange={handleChange} />
-      <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}><SubmitButton onClick={handleSubmit}>Add</SubmitButton></div>
+      <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}><SubmitButton onClick={handleSubmit}>ADD</SubmitButton></div>
     </Modal>
   );
 }
