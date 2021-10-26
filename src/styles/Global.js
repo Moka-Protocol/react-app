@@ -2,17 +2,25 @@ import { createGlobalStyle } from 'styled-components';
 
 export const GlobalStyle = createGlobalStyle`
   html, body {
-    height: 100%;
-    width: 100%;
-    margin: 0;
-    background: #fde7dc;
+    background: #fffdf4;
     color: #333;
     font-family: Montserrat, sans-serif;
     cursor: default;
     font-size: 0.95em;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    overflow-y: scroll;
+    overscroll-behavior-y: none;
+  }
+
+  select {
+    font-family: Montserrat, sans-serif;
   }
 
   body.shiftOn * {
@@ -49,8 +57,16 @@ export const GlobalStyle = createGlobalStyle`
 
   #root {
     height: 100%;
-    width: 100%;
-    display: flex;
+  }
+
+  .post-link {
+    text-decoration: none;
+    font-weight: 500;
+    color: #4968c1;
+
+    &:hover {
+      text-decoration: underline;
+    }
   }
 
   body.ReactModal__Body--open {

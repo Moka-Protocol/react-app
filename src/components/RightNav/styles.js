@@ -6,8 +6,22 @@ export const Wrap = styled.div`
   box-sizing: border-box;
   display: flex;
   flex-shrink: 0;
-  position: relative;
   flex-direction: column;
+  position: fixed;
+  top: 0px;
+  right: calc((100% - 1000px) / 2 - 220px);
+
+  @media (max-width: 1440px) {
+    right: calc((100% - 800px) / 2 - 220px);
+  }
+
+  @media (max-width: 1280px) {
+    right: calc((100% - 500px) / 2 - 220px);
+  }
+
+  @media (max-width: 1000px) {
+    display: none;
+  }
 `;
 
 export const Wallet = styled.div`
@@ -32,6 +46,15 @@ export const WalletRow = styled.div`
   margin: 3px 0px;
 `;
 
+export const WalletLink = styled.a`
+  text-decoration: none;
+  color: inherit;
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
 export const WalletRowBalance = styled.div`
   margin-left: auto;
   margin-right: 5px;
@@ -42,7 +65,7 @@ export const WalletRowIcon = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 3px;
+  margin-left: 2px;
 `;
 
 export const ClaimTokens = styled.div`
@@ -63,21 +86,4 @@ export const ClaimTokensIconWrap = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-`;
-
-export const Link = styled.a`
-  display: flex;
-  flex-shrink: 0;
-  height: 45px;
-  width: 100%;
-  align-items: center;
-  padding-left: 20px;
-  box-sizing: border-box;
-  cursor: pointer;
-  color: #656464;
-  text-decoration: none;
-
-  &:hover {
-    color: #000;
-  }
 `;

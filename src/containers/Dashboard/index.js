@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { gql, useQuery } from "@apollo/client";
 import { CONTRACTS } from 'constants/constants';
-import { GET_USER_UPVOTES } from 'gql/queries';
+import { getCurrentTimeMappings } from 'constants/functions';
+import { GET_USER_UPVOTES_IDS, GET_DAILY_REWARDS_COUNT, GET_WEEKLY_REWARDS_COUNT, GET_MONTHLY_REWARDS_COUNT } from 'gql/queries';
 
 //WEB3
 import { useEthers } from '@usedapp/core';
@@ -14,17 +15,26 @@ import MokaTokenSaleABI from 'contracts/MokaTokenSale.json';
 
 //COMPONENTS
 import LeftNav from 'components/LeftNav';
-import Feed from 'components/Feed';
 import RightNav from 'components/RightNav';
+
 import Notifications from 'components/Notifications';
+import Errors from 'components/Errors';
+
+import Feed from 'components/Feed';
+import Rewards from 'components/Rewards';
+import ProfileActivity from 'components/Profile/Activity';
+import ProfilePosts from 'components/Profile/Posts';
+import ProfileLikes from 'components/Profile/Likes';
 
 //MODALS
-import AddModal from 'components/AddModal';
-import PaymentModal from 'components/PaymentModal';
-import WrongNetworkModal from 'components/WrongNetworkModal';
+import AddModal from 'components/Modals/AddModal';
+import PaymentModal from 'components/Modals/PaymentModal';
+import WrongNetworkModal from 'components/Modals/WrongNetworkModal';
 
 //STYLES
-import { Wrap, Body } from './styles';
+import { Body } from './styles';
+
+const mappings = getCurrentTimeMappings();
 
 function Dashboard(props) {
   const paramId = props.match.params.id;
@@ -32,8 +42,13 @@ function Dashboard(props) {
   const [userUpvotes, setUserUpvotes] = useState([]);
   const [modal, setModal] = useState(null);
   const [wrongNetwork, setWrongNetwork] = useState(false);
+  const [txError, setTxError] = useState(null);
   const { activateBrowserWallet, account, error } = useEthers();
-  const { data: voteData, refetch } = useQuery(gql(GET_USER_UPVOTES), { variables: { id: account && account.toString().toLowerCase() } });
+  const { data: voteData, refetch } = useQuery(gql(GET_USER_UPVOTES_IDS), { variables: { id: account && account.toString().toLowerCase() }, skip: !account });
+
+  const { data: dailyRewards } = useQuery(gql(GET_DAILY_REWARDS_COUNT), { variables: { id: mappings.daily } });
+  const { data: weeklyRewards } = useQuery(gql(GET_WEEKLY_REWARDS_COUNT), { variables: { id: mappings.weekly } });
+  const { data: monthlyRewards } = useQuery(gql(GET_MONTHLY_REWARDS_COUNT), { variables: { id: mappings.monthly } });
 
   const [tokenBalance] = useContractCall(account && {
     abi: new utils.Interface(MokaTokenABI),
@@ -56,6 +71,7 @@ function Dashboard(props) {
     args: null
   }) ?? null
 
+  //REFETCH ACCOUNT UPVOTES
   useEffect(() => {
     if (voteData) {
       if (voteData && voteData.user && voteData.user.upvotes && voteData.user.upvotes.length > 0 && voteData.user.id === account.toString().toLowerCase()) {
@@ -78,6 +94,7 @@ function Dashboard(props) {
     }
   },[voteData, account, refetch]);
 
+  //WRONG NETWORK
   useEffect(() => {
     if (
       (error && error.message && error.message.toLowerCase().replace(/\s/g, '').includes('unsupportedchain')) ||
@@ -87,39 +104,54 @@ function Dashboard(props) {
     }
   },[error]);
 
+  const onTxErrorCallback = useCallback(error => {
+    setTxError(error);
+    setTimeout(function(){ setTxError(null); }, 2000);
+  }, []);
+
   return (
-    <Wrap>
+    <React.Fragment>
+      <LeftNav parentProps={props} />
       <Body>
-        <LeftNav
-          paramId={paramId}
-          paramTime={paramTime}
-          parentProps={props}
-        />
         {
-          paramId &&
-          <React.Fragment>
-            <Feed
-              paramId={paramId}
-              paramTime={paramTime}
-              account={account}
-              userUpvotes={userUpvotes}
-              setModal={(value) => {setModal(value)}}
-            />
-            <RightNav
-              paramId={paramId}
-              paramTime={paramTime}
-              wrongNetwork={wrongNetwork}
-              account={account}
-              tokenBalance={tokenBalance}
-              addressExists={addressExists}
-              priceBand={priceBand}
-              activateBrowserWallet={() => activateBrowserWallet()}
-              setModal={(value) => setModal(value)}
-            />
-          </React.Fragment>
+          props.match.url.startsWith('/feed') &&
+          <Feed account={account} userUpvotes={userUpvotes} txErrorCallback={onTxErrorCallback} />
+        }
+        {
+          props.match.url.startsWith('/rewards') &&
+          <Rewards account={account} userUpvotes={userUpvotes} parentProps={props} txErrorCallback={onTxErrorCallback} />
+        }
+        {
+          props.match.url.startsWith('/profile/activity') &&
+          <ProfileActivity account={account} userUpvotes={userUpvotes} parentProps={props} txErrorCallback={onTxErrorCallback} />
+        }
+        {
+          props.match.url.startsWith('/profile/posts') &&
+          <ProfilePosts account={account} userUpvotes={userUpvotes} parentProps={props} txErrorCallback={onTxErrorCallback} />
+        }
+        {
+          props.match.url.startsWith('/profile/likes') &&
+          <ProfileLikes account={account} userUpvotes={userUpvotes} parentProps={props} txErrorCallback={onTxErrorCallback} />
         }
       </Body>
-      <Notifications pageLoadTime={props.pageLoadTime} />
+      <RightNav
+        wrongNetwork={wrongNetwork}
+        account={account}
+        tokenBalance={tokenBalance}
+        addressExists={addressExists}
+        priceBand={priceBand}
+        rewards={[dailyRewards, weeklyRewards, monthlyRewards]}
+        activateBrowserWallet={() => activateBrowserWallet()}
+        setModal={(value) => setModal(value)}
+      />
+      {
+        txError &&
+        <Errors error={txError} />
+      }
+      {
+        !txError &&
+        <Notifications pageLoadTime={props.pageLoadTime} />
+      }
       {
         modal === 'ADD' &&
         <AddModal
@@ -141,7 +173,7 @@ function Dashboard(props) {
         modal === 'WRONG-NETWORK' &&
         <WrongNetworkModal closeModal={() => setModal(null)} />
       }
-    </Wrap>
+    </React.Fragment>
   );
 }
 

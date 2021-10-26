@@ -3,29 +3,82 @@ import { GET_DAILY_POSTS, GET_WEEKLY_POSTS, GET_MONTHLY_POSTS, GET_ALL_POSTS } f
 export function getCurrentTimeMappings() {
   let date = new Date()
   let d = new Date(date);
-  let day = date.getDay(),
-      diff = date.getDate() - day + (day === 0 ? -6 : 1);
-  let monday = new Date(d.setDate(diff));
+  let day = date.getUTCDay(),
+      diff = date.getUTCDate() - day + (day === 0 ? -6 : 1);
+  let monday = new Date(d.setUTCDate(diff));
 
-  let todayReturn  = [date.getFullYear(), (date.getMonth() + 1), date.getDate()].join('-');
-  let weekReturn = [monday.getFullYear(), (monday.getMonth() + 1), monday.getDate()].join('-');
-  let monthReturn = [date.getFullYear(), (date.getMonth() + 1)].join('-');
+  let todayReturn  = [date.getUTCFullYear(), (date.getUTCMonth() + 1), date.getUTCDate()].join('-');
+  let weekReturn = [monday.getUTCFullYear(), (monday.getUTCMonth() + 1), monday.getUTCDate()].join('-');
+  let monthReturn = [date.getUTCFullYear(), (date.getUTCMonth() + 1)].join('-');
 
   return { daily: todayReturn, weekly: weekReturn, monthly: monthReturn };
+}
+
+export function getLast31Days() {
+  var returnArr = [];
+  var date = new Date();
+
+  for (var i = 0; i <= 31; i++) {
+    returnArr.push([date.getUTCFullYear(), (date.getUTCMonth() + 1), date.getUTCDate()].join('-'));
+    date.setUTCDate(date.getUTCDate() - 1);
+  }
+
+  return returnArr;
+}
+
+export function getLast12Weeks() {
+  var returnArr = [];
+
+  for (var i = 0; i <= 12; i++) {
+    let date = new Date();
+    date.setUTCDate(date.getUTCDate() - (7 * i));
+  
+    let d = new Date(date);
+    let day = date.getUTCDay(),
+        diff = date.getUTCDate() - day + (day === 0 ? -6 : 1);
+    let monday = new Date(d.setUTCDate(diff));
+
+    returnArr.push([monday.getUTCFullYear(), (monday.getUTCMonth() + 1), monday.getUTCDate()].join('-'));
+  }
+
+  return returnArr;
+}
+
+export function getLast12Months() {
+  var returnArr = [];
+  var date = new Date();
+  date.setUTCDate(1);
+
+  for (var i = 0; i <= 12; i++) {
+    returnArr.push([date.getUTCFullYear(), (date.getUTCMonth() + 1)].join('-'));
+    date.setUTCMonth(date.getUTCMonth() - 1);
+  }
+
+  return returnArr;
+}
+
+export function getRewardDateOptions(timeframe) {
+  if (timeframe === 'daily') {
+    return getLast31Days();
+  } else if (timeframe === 'weekly') {
+    return getLast12Weeks();
+  } else if (timeframe === 'monthly') {
+    return getLast12Months();
+  }
 }
 
 export function getMDHMForTimestamp(timestamp) {
   try {
     let date = new Date(timestamp * 1000);
     let month = ['Jan' , 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    let hours = date.getHours();
-    let minutes = date.getMinutes();
+    let hours = date.getUTCHours();
+    let minutes = date.getUTCMinutes();
     let ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12;
     hours = hours ? hours : 12;
     minutes = minutes < 10 ? ('0' + minutes) : minutes;
 
-    return month[date.getMonth()] + " " +  date.getDate() + " " + hours + ':' + minutes + ampm + ' UTC';
+    return month[date.getUTCMonth()] + " " +  date.getUTCDate() + " " + hours + ':' + minutes + ampm + ' UTC';
   } catch(e) {
     return '-';
   }
@@ -70,23 +123,7 @@ export function getDisplayForTimestamp(timestamp, short = true) {
   }
 }
 
-export function extractHostname(url) {
-  var hostname;
-
-  if (url.indexOf("//") > -1) {
-      hostname = url.split('/')[2];
-  }
-  else {
-      hostname = url.split('/')[0];
-  }
-
-  hostname = hostname.split(':')[0];
-  hostname = hostname.split('?')[0];
-
-  return hostname;
-}
-
-export function getGQLQuery(paramTime) {
+export function getPostsQuery(paramTime) {
   if (paramTime === 'daily') {
     return GET_DAILY_POSTS;
   } else if (paramTime === 'weekly') {
@@ -96,6 +133,52 @@ export function getGQLQuery(paramTime) {
   }
 
   return GET_ALL_POSTS;
+}
+
+export function returnRewardCount(type, posts) {
+  if (type === 'daily') {
+    if (posts && posts.postDayMapping && posts.postDayMapping.rewards) {
+      return posts.postDayMapping.rewards;
+    }
+  } else if (type === 'weekly') {
+    if (posts && posts.postWeekMapping && posts.postWeekMapping.rewards) {
+      return posts.postWeekMapping.rewards;
+    }
+  } else if (type === 'monthly') {
+    if (posts && posts.postMonthMapping && posts.postMonthMapping.rewards) {
+      return posts.postMonthMapping.rewards;
+    }
+  }
+
+  return '-';
+}
+
+export function parsePostsData(type, posts) {
+  if (type === 'daily') {
+    if (posts && posts.postDayMapping) {
+      return posts.postDayMapping;
+    }
+  } else if (type === 'weekly') {
+    if (posts && posts.postWeekMapping) {
+      return posts.postWeekMapping;
+    }
+  } else if (type === 'monthly') {
+    if (posts && posts.postMonthMapping) {
+      return posts.postMonthMapping;
+    }
+  }
+
+  return null;
+}
+
+export function getLeaderboardQueryVariableId(timeframe, date) {
+  if (timeframe === 'daily') {
+    return date + '_day';
+  } else if (timeframe === 'weekly') {
+    return date + '_week';
+  } else if (timeframe === 'monthly') {
+    return date + '_month';
+  }
 }
 
 export function getGQLVariableId(paramTime, paramId) {

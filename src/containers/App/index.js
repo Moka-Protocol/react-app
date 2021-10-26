@@ -2,10 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Switch, Route, Redirect } from 'react-router-dom';
 
 //COMPONENTS
-import About from 'containers/About';
-import Activity from 'containers/Activity';
 import Dashboard from 'containers/Dashboard';
-import Leaderboard from 'containers/Leaderboard';
 
 function App(props) {
   const pageLoadTime = new Date().getTime();
@@ -20,13 +17,12 @@ function App(props) {
     >
       <Router>
         <Switch>
-          <Redirect exact from="/" to="/d" />
-          <Redirect exact from="/d/:id" to="/d/:id/latest" />
-          <Route path={["/d/:id/:time","/d"]} render={(props) => (<Dashboard {...props} pageLoadTime={pageLoadTime} />)} />
-          <Route path="/about" component={About} />
-          <Route path="/activity" component={Activity} />
-          <Route path="/leaderboard" component={Leaderboard} />
-          <Route exact path="*" to="/d" />
+
+          <Redirect exact from="/" to="/feed" />
+          <Redirect exact from="/rewards" to="/rewards/daily" />
+          <Redirect exact from="/profile" to="/profile/activity" />
+          <Route path={["/rewards/:type/:date", "/rewards/:type", "/profile/:type", "/rewards", "/profile", "/feed"]} render={(props) => (<Dashboard {...props} pageLoadTime={pageLoadTime} />)} />
+
         </Switch>
       </Router>
     </React.Suspense>

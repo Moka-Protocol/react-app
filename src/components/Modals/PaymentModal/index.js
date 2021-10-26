@@ -1,7 +1,7 @@
 import React, { useState, useEffect }  from 'react';
 import ReactTooltip from 'react-tooltip';
 import Modal from 'react-modal';
-import { CONTRACTS, STABLECOINDECIMALS } from 'constants/constants';
+import { CONTRACTS, STABLECOINDECIMALS, LINKS } from 'constants/constants';
 
 //WEB3
 import { useContractFunction } from '@usedapp/core';
@@ -23,7 +23,7 @@ import Info from 'assets/svgs/info';
 import Checkmark from 'assets/svgs/checkmark';
 
 //STYLES
-import { Title, CoinOptions, CoinButton, CoinSVG, CoinName, SubmitButton, SubmitIconWrap } from './styles';
+import { Title, CoinOptions, CoinButton, CoinSVG, CoinName, SubmitButton, SubmitIconWrap, TXError } from './styles';
 
 const customStyles = {
   content: {
@@ -39,9 +39,9 @@ const customStyles = {
 
 Modal.setAppElement('#root');
 
-
 function SignupModal(props) {
   const [stable, setStable] = useState(null);
+  const [txError, setTxError] = useState(null);
   const [txState, setTxProcess] = useState(0);
 
   const erc20Contract = stable ? new Contract(CONTRACTS[process.env.REACT_APP_ENV].ERC20[stable], new utils.Interface(ERC20ABI)) : null;
@@ -56,6 +56,8 @@ function SignupModal(props) {
     } else if (stateApproval.status === 'Success') {
       setTxProcess(2);
     } else if (stateApproval.status === 'Fail' || stateApproval.status === 'Exception') {
+      setTxError('Blockchain Tx Error');
+      setTimeout(function(){ setTxError(null); }, 2000);
       setTxProcess(0);
     }
   },[stateApproval]);
@@ -66,6 +68,8 @@ function SignupModal(props) {
     } else if (stateBuyMoka.status === 'Success') {
       props.closeModal();
     } else if (stateBuyMoka.status === 'Fail' || stateBuyMoka.status === 'Exception') {
+      setTxError('Blockchain Tx Error');
+      setTimeout(function(){ setTxError(null); }, 2000);
     }
   },[stateBuyMoka, props]);
 
@@ -156,7 +160,11 @@ function SignupModal(props) {
             </React.Fragment>
           }
         </SubmitButton>
-        <a href="https://www.google.com" target="_blank" style={{ fontSize: '0.85em', textDecoration: 'underline', color: '#707070' }} rel="noreferrer">Learn more about Moka Token distribution</a>
+        <a href={LINKS.TOKENDISTRIBUTION} target="_blank" style={{ fontSize: '0.85em', textDecoration: 'underline', color: '#707070' }} rel="noreferrer">Learn more about Moka Token distribution</a>
+        {
+          txError &&
+          <TXError>{txError}</TXError>
+        }
       </div>
     </Modal>
   );

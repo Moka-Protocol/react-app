@@ -7,7 +7,6 @@ import { CONTRACTS } from 'constants/constants';
 //WEB3
 import { useContractFunction } from '@usedapp/core';
 import { utils } from 'ethers';
-import { BigNumber } from '@ethersproject/bignumber'
 import { Contract } from '@ethersproject/contracts';
 
 //CONTRACT ABIS
@@ -18,7 +17,7 @@ import { updateAddPost } from 'cache/update';
 
 //STYLES
 import './tags.css';
-import { InputWrap, Input, SubmitButton } from './styles';
+import { InputWrap, TextArea, SubmitButton, TXError } from './styles';
 
 const customStyles = {
   content: {
@@ -28,34 +27,41 @@ const customStyles = {
     bottom: 'auto',
     marginRight: '-50%',
     transform: 'translate(-50%, -50%)',
-    width: '300px'
+    width: '400px'
   },
 };
 
 Modal.setAppElement('#root');
 
-const contract = new Contract(CONTRACTS[process.env.REACT_APP_ENV].MOKATOKEN, new utils.Interface(MokaTokenABI))
+const contract = new Contract(CONTRACTS[process.env.REACT_APP_ENV].MOKATOKEN, new utils.Interface(MokaTokenABI));
 
 function AddModal(props) {
   const client = useApolloClient();
   const [updateCache, setUpdateCache] = useState(false);
   const [tags, handleChange] = useState([]);
-  const [url, setUrl] = useState("");
-  const [title, setTitle] = useState("");
-  const [desc, setDesc] = useState("");
+  const [text, setText] = useState('');
+  const [txError, setTxError] = useState(null);
   const { state, send } = useContractFunction(contract, 'createPost', { transactionName: 'Add Post' })
 
   useEffect(() => {
     if (state.status === 'Mining' && updateCache === false) {
       setUpdateCache(true);
-      updateAddPost(client, props.account, { title, desc, url, tags }, props.paramId, props.paramTime);
+      updateAddPost(client, props.account, { text, tags });
       props.closeModal();
+    } else if (state.status === 'Fail' || state.status === 'Exception') {
+      if (state.errorMessage === 'execution reverted: ERC20: transfer amount exceeds balance') {
+        setTxError('Not enough tokens');
+      } else {
+        setTxError(state.errorMessage);
+      }
+
+      setTimeout(function(){ setTxError(null); }, 2000);
     }
-  },[state, updateCache, setUpdateCache, client, props, title, desc, url, tags]);
+  },[state, updateCache, setUpdateCache, client, props, text, tags]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    send(props.paramId.split('_')[1], BigNumber.from(6), title, desc, url, tags);
+    send(text, tags);
   }
 
   return (
@@ -68,31 +74,19 @@ function AddModal(props) {
       onRequestClose={props.closeModal}
     >
       <InputWrap>
-        <Input
-          placeholder="URL"
+        <TextArea
+          placeholder="What's up"
           type="text"
-          value={url}
-          onChange={e => setUrl(e.target.value)}
-        />
-      </InputWrap>
-      <InputWrap>
-        <Input
-          placeholder="Title"
-          type="text"
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-        />
-      </InputWrap>
-      <InputWrap>
-        <Input
-          placeholder="Desc"
-          type="text"
-          value={desc}
-          onChange={e => setDesc(e.target.value)} 
+          value={text}
+          onChange={e => setText(e.target.value)}
         />
       </InputWrap>
       <TagsInput value={tags} onChange={handleChange} />
       <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}><SubmitButton onClick={handleSubmit}>ADD</SubmitButton></div>
+      {
+        txError &&
+        <TXError>TX Error: {txError}</TXError>
+      }
     </Modal>
   );
 }

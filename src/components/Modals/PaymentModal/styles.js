@@ -63,3 +63,10 @@ export const SubmitIconWrap = styled.div`
   align-items: center;
   justify-content: center;
 `;
+
+export const TXError = styled.div`
+  margin-top: 15px;
+  color: #e34848;
+  font-weight: 500;
+  font-size: 0.95em;
+`;

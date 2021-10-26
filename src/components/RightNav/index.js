@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import ReactTooltip from 'react-tooltip';
 import { gql, useQuery } from "@apollo/client";
-import { CONTRACTS, LINKS, MOKALINKS } from 'constants/constants';
+import { CONTRACTS, MOKA_LINKS } from 'constants/constants';
+import { GET_USER_TOKEN_STATS } from 'gql/queries';
 
 //WEB3
 import { utils } from 'ethers';
@@ -18,17 +19,7 @@ import Loading from 'assets/svgs/loading';
 import Info from 'assets/svgs/info';
 
 //STYLES
-import { Wrap, Wallet, WalletRow, WalletRowBalance, WalletRowIcon, ClaimTokens, ClaimTokensIconWrap, Link } from './styles';
-
-const GET_USER_TOKEN_STATS = `
-  query GetUserTokenStats($id: String!) {
-    user(id: $id) {
-      id
-      tokenRewards
-      tokenSpent
-    }
-  }
-`;
+import { Wrap, Wallet, WalletRow, WalletLink, WalletRowBalance, WalletRowIcon, ClaimTokens, ClaimTokensIconWrap } from './styles';
 
 const tokenSaleContract = new Contract(CONTRACTS[process.env.REACT_APP_ENV].MOKATOKENSALE, new utils.Interface(MokaTokenSaleABI))
 
@@ -37,8 +28,9 @@ function RightNav(props) {
 
   const account = props.account;
   const wrongNetwork = props.wrongNetwork;
+  const rewards = props.rewards;
 
-  const { data: userData } = useQuery(gql(GET_USER_TOKEN_STATS), { variables: { id: account && account.toString().toLowerCase() } });
+  const { data: userData } = useQuery(gql(GET_USER_TOKEN_STATS), { variables: { id: account && account.toString().toLowerCase() }, skip: !account });
   const { send, state } = useContractFunction(tokenSaleContract, 'buy', { transactionName: 'Buy' })
 
   useEffect(() => {
@@ -69,14 +61,14 @@ function RightNav(props) {
               style={{ alignItems: 'center', fontWeight: 600 }}
               onClick={() => props.activateBrowserWallet()}
             >
-              ⛓️&nbsp;&nbsp;Connect Wallet
+              ⛓️&nbsp;Connect Wallet
             </Wallet>
           }
           {
             account &&
             <Wallet>
-              <WalletRow title={account} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '10px', fontWeight: 500 }}>
-                <a href={MOKALINKS[process.env.REACT_APP_ENV].USERS + account} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>⛓️&nbsp;&nbsp;{account.substring(0, 8)}...</a>
+              <WalletRow title={account} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '10px', fontWeight: 600 }}>
+                <WalletLink href={MOKA_LINKS[process.env.REACT_APP_ENV].user + account} target="_blank" rel="noreferrer">⛓️&nbsp;{account.substring(0, 8)}...</WalletLink>
               </WalletRow>
               <WalletRow>
                 <div>Balance</div>
@@ -93,7 +85,7 @@ function RightNav(props) {
                 <WalletRowBalance>
                   {
                     userData && userData.user && userData.user.tokenRewards &&
-                    <div>{userData.user.tokenRewards.toLocaleString()}</div>
+                    <div>{(userData.user.tokenRewards / (10 ** 18)).toLocaleString()}</div>
                   }
                   {
                     userData && !userData.user &&
@@ -107,7 +99,7 @@ function RightNav(props) {
                 <WalletRowBalance>
                   {
                     userData && userData.user && userData.user.tokenSpent &&
-                    <div>{userData.user.tokenSpent.toLocaleString()}</div>
+                    <div>{(userData.user.tokenSpent / (10 ** 18)).toLocaleString()}</div>
                   }
                   {
                     userData && !userData.user &&
@@ -152,13 +144,54 @@ function RightNav(props) {
           }
         </React.Fragment>
       }
+      <Wallet>
+        <WalletRow title={account} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '10px', fontWeight: 600 }}>
+        🎉&nbsp;Rewards
+        </WalletRow>
+        <WalletRow>
+          <div>Today</div>
+          <WalletRowBalance>
+            {
+              rewards[0] && rewards[0].postDayMapping &&
+              <React.Fragment>{rewards[0].postDayMapping.rewards}</React.Fragment>
+            }
+            {
+              rewards[0] && rewards[0].postDayMapping === null &&
+              <React.Fragment>0</React.Fragment>
+            }
+            <WalletRowIcon><Moka size="12px" /></WalletRowIcon>
+          </WalletRowBalance>
+        </WalletRow>
+        <WalletRow>
+          <div>This Week</div>
+          <WalletRowBalance>
+            {
+              rewards[1] && rewards[1].postWeekMapping &&
+              <React.Fragment>{rewards[1].postWeekMapping.rewards}</React.Fragment>
+            }
+            {
+              rewards[1] && rewards[1].postWeekMapping === null &&
+              <React.Fragment>0</React.Fragment>
+            }
+            <WalletRowIcon><Moka size="12px" /></WalletRowIcon>
+          </WalletRowBalance>
+        </WalletRow>
+        <WalletRow>
+          <div>This Month</div>
+          <WalletRowBalance>
+            {
+              rewards[2] && rewards[2].postMonthMapping &&
+              <React.Fragment>{rewards[2].postMonthMapping.rewards}</React.Fragment>
+            }
+            {
+              rewards[2] && rewards[2].postMonthMapping === null &&
+              <React.Fragment>0</React.Fragment>
+            }
+            <WalletRowIcon><Moka size="12px" /></WalletRowIcon>
+          </WalletRowBalance>
+        </WalletRow>
+      </Wallet>
       <Wallet style={{ textAlign: 'center', fontWeight: 700, marginBottom: '15px' }} onClick={() => { props.setModal('ADD'); }}>ADD POST</Wallet>
-      <Link href={MOKALINKS[process.env.REACT_APP_ENV].LEADERBOARD} target="_blank" rel="noreferrer">Leaderboard</Link>
-      <Link href={LINKS.ABOUT} target="_blank" rel="noreferrer">About Moka</Link>
-      <Link href="https://www.ethereum.org" target="_blank" rel="noreferrer" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginTop: '5px' }}>
-        <div>Built on ♦</div>
-        <div style={{ fontSize: '0.8em' }}>(Polygon Network)</div>
-      </Link>
     </Wrap>
   );
 }

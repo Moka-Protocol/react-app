@@ -1,43 +1,52 @@
-import React, { useEffect } from 'react';
-import { CONTRACTS } from 'constants/constants';
-
-//WEB3
-import { useContractCall } from '@usedapp/core';
-import { utils } from 'ethers';
-import MokaFactoryABI from 'contracts/MokaFactory.json';
+import React from 'react';
+import { LINKS } from 'constants/constants';
 
 //STYLES
-import { Wrap, Item } from './styles';
+import { Wrap, Item, SubItemWrap, SubItem, Link } from './styles';
 
 function LeftNav(props) {
-  const [forums] = useContractCall({
-    abi: new utils.Interface(MokaFactoryABI),
-    address: CONTRACTS[process.env.REACT_APP_ENV].FORUMFACTORY,
-    method: 'getForums',
-    args: null,
-  }) ?? []
-
-  useEffect(() => {
-    if (forums && forums.length > 0 && !props.paramId) {
-      props.parentProps.history.push('/d/' + forums[0][0] + '_' + forums[0][2] + '/latest');
-    }
-  },[forums, props.paramId, props.parentProps.history]);
-
   return (
     <Wrap>
+      <Item
+        to="/feed"
+        activeStyle={{ background: '#fbf6df', color: '#000', fontWeight: 600 }}
+      >
+        Live Feed
+      </Item>
+      <Item
+        to="/rewards"
+        activeStyle={{ background: '#fbf6df', color: '#000', fontWeight: 600 }}
+      >
+        Rewards
+      </Item>
       {
-        forums && forums.map(item => {
-          return (
-            <Item
-              key={item[0]}
-              to={'/d/' + item[0] + '_' + item[2]}
-              activeStyle={{ background: '#fdf2ed', color: '#000', fontWeight: 600 }}
-            >
-              {item[1]}
-            </Item>
-          );
-        })
+        props.parentProps.match.path.startsWith('/rewards') &&
+        <SubItemWrap>
+          <SubItem to="/rewards/daily" activeStyle={{ color: '#000', textDecoration: 'underline' }}>Daily</SubItem>
+          <SubItem to="/rewards/weekly" activeStyle={{ color: '#000', textDecoration: 'underline' }}>Weekly</SubItem>
+          <SubItem to="/rewards/monthly" activeStyle={{ color: '#000', textDecoration: 'underline' }}>Monthly</SubItem>
+        </SubItemWrap>
       }
+      <Item
+        to={'/profile'}
+        activeStyle={{ background: '#fbf6df', color: '#000', fontWeight: 600 }}
+      >
+        My Profile
+      </Item>
+      {
+        props.parentProps.match.path.startsWith('/profile') &&
+        <SubItemWrap>
+          <SubItem to="/profile/activity" activeStyle={{ color: '#000', textDecoration: 'underline' }}>Activity</SubItem>
+          <SubItem to="/profile/posts" activeStyle={{ color: '#000', textDecoration: 'underline' }}>My Posts</SubItem>
+          <SubItem to="/profile/likes" activeStyle={{ color: '#000', textDecoration: 'underline' }}>My Likes</SubItem>
+        </SubItemWrap>
+      }
+      <div style={{ display: 'flex', justifyContent: 'flex-end', paddingRight: '20px', color: '#959494' }}>------------------------</div>
+      <Link href={LINKS.ABOUT} target="_blank" rel="noreferrer">About Moka</Link>
+      <Link href="https://www.ethereum.org" target="_blank" rel="noreferrer" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'space-evenly' }}>
+        <div>Built on ♦</div>
+        <div style={{ fontSize: '0.8em' }}>(Polygon Network)</div>
+      </Link>
     </Wrap>
   );
 }
